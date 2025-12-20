@@ -12,6 +12,7 @@ import { Alert, AlertTitle } from "@/components/ui/alert";
 import { OctagonAlertIcon } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 
 const formSchema = z.object({
@@ -28,6 +29,8 @@ export const SignUpView = () => {
 
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(false);
+
+    const router = useRouter();
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -49,7 +52,8 @@ export const SignUpView = () => {
             callbackURL: "/",
         }, {
             onSuccess: () => {
-                setIsLoading(false)
+                setIsLoading(false);
+                router.push("/");
             },
             onError: (error) => {
                 setIsLoading(false)

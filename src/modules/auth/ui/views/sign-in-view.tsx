@@ -11,6 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { OctagonAlertIcon } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 
@@ -22,6 +23,7 @@ const formSchema = z.object({
 export const SignInView = () => {
 
     const [error, setError] = useState<string | null>(null);
+    const router = useRouter();
     const [isLoading, setIsLoading] = useState<boolean>(false);
 
     const form = useForm<z.infer<typeof formSchema>>({
@@ -41,7 +43,8 @@ export const SignInView = () => {
             callbackURL: "/",
         }, {
             onSuccess: () => {
-                setIsLoading(false)
+                setIsLoading(false);
+                router.push("/");
             },
             onError: (error) => {
                 setIsLoading(false)
