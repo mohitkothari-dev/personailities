@@ -148,7 +148,7 @@ const onSocial = async (provider: "google" | "github") => {
               </div>
               {!!error &&
                 <Alert className="bg-destructive/10">
-                  <OctagonAlertIcon className="h-4 w-4 !text-destructive" />
+                  <OctagonAlertIcon className="h-4 w-4 text-destructive!" />
                   <AlertTitle>{error}</AlertTitle>
                 </Alert>
               }
