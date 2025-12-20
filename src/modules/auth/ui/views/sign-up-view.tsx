@@ -11,7 +11,6 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { OctagonAlertIcon } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 
@@ -27,7 +26,6 @@ const formSchema = z.object({
 })
 export const SignUpView = () => {
 
-    const router = useRouter();
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(false);
 
@@ -48,10 +46,10 @@ export const SignUpView = () => {
             name: data.name,
             email: data.email,
             password: data.password,
+            callbackURL: "/",
         }, {
             onSuccess: () => {
                 setIsLoading(false)
-                router.push("/")
             },
             onError: (error) => {
                 setIsLoading(false)
@@ -59,6 +57,24 @@ export const SignUpView = () => {
             }
         })
     }
+
+const onSocial = async (provider: "google" | "github") => {
+        setIsLoading(true)
+        setError(null)
+        authClient.signIn.social({
+          provider: provider,  
+          callbackURL: "/",
+        }, {
+            onSuccess: () => {
+                setIsLoading(false)
+            },
+            onError: (error) => {
+                setIsLoading(false)
+                setError(error.error.message)
+            }
+        })
+    }
+
   return (
     <div className="flex flex-col gap-6">
     <Card className="overflow-hidden p-0">
@@ -140,8 +156,22 @@ export const SignUpView = () => {
                 </span>
                </div>
                <div className="grid grid-cols-2 gap-4">
-                <Button disabled={isLoading} variant={"outline"} type="button" className="w-full">Google</Button>
-                <Button disabled={isLoading} variant={"outline"} type="button" className="w-full">GitHub</Button>
+                <Button 
+                disabled={isLoading}
+                onClick={() => onSocial("google")}
+                variant={"outline"} 
+                type="button" 
+                className="w-full">
+                  Google
+                </Button>
+                <Button 
+                disabled={isLoading} 
+                onClick={() => onSocial("github")}
+                variant={"outline"} 
+                type="button" 
+                className="w-full">
+                  GitHub
+                </Button>
                </div>
                <div className="text-center text-sm">
                 <p>
