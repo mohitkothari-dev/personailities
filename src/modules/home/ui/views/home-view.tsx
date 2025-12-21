@@ -16,7 +16,7 @@ export const HomeView = () => {
   return (
     <div className="p-4 flex flex-col gap-y-4">
         <p>Welcome, {session.user?.name}</p>
-        <Button onClick={() => authClient.signOut({ 
+        <Button className="[background-image:var(--primary-gradient)]" onClick={() => authClient.signOut({ 
           fetchOptions: { onSuccess: () => router.push("/sign-in")            
           } 
           })}>Sign Out</Button>
