@@ -1,4 +1,4 @@
-import { CommandResponsiveDialog, CommandInput, CommandList, CommandItem } from "@/components/ui/command"
+import { CommandDialog, CommandInput } from "@/components/ui/command"
 import { Dispatch, SetStateAction } from "react";
 
 
@@ -11,15 +11,11 @@ interface Props {
 
 export const DashboardCommand = ({open, setOpen} : Props) => {
   return (
-    <CommandResponsiveDialog open={open} onOpenChange={setOpen}>
+    <CommandDialog open={open} onOpenChange={setOpen}>
       <CommandInput 
       placeholder="Find a conversation..."
       />
-      <CommandList>
-        <CommandItem>
-          Test
-        </CommandItem>
-      </CommandList>
-    </CommandResponsiveDialog>
+
+    </CommandDialog>
   )
 }
