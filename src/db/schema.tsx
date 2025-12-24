@@ -1,7 +1,8 @@
+import { nanoid } from "nanoid";
 import { pgTable, text, timestamp, boolean } from "drizzle-orm/pg-core";
 
 export const user = pgTable("user", {
- id: text('id').primaryKey(),
+ id: text('id').primaryKey().$defaultFn(() => nanoid()),
  name: text('name').notNull(),
  email: text('email').notNull().unique(),
  emailVerified: boolean('email_verified').$defaultFn(() => false).notNull(),
@@ -44,4 +45,14 @@ export const verification = pgTable("verification", {
  expiresAt: timestamp('expires_at').notNull(),
  createdAt: timestamp('created_at').$defaultFn(() => /* @__PURE__ */ new Date()),
  updatedAt: timestamp('updated_at').$defaultFn(() => /* @__PURE__ */ new Date())
+});
+
+export const agents = pgTable('agents', {
+    id: text('id').primaryKey().$defaultFn(() => nanoid()), //nanoid are shorter and readable then uuids
+    name: text('name').notNull(),
+    userId: text('user_id').notNull().references(()=> user.id, { onDelete: 'cascade' }),
+    createdAt: timestamp('created_at').notNull().$defaultFn(() => /* @__PURE__ */ new Date()),
+    updatedAt: timestamp('updated_at').notNull().$defaultFn(() => /* @__PURE__ */ new Date()),
+    instructions: text('instructions').notNull(),
+
 });
