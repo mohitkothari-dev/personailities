@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { NuqsAdapter } from "nuqs/adapters/next";
 
 import { TRPCReactProvider } from "@/trpc/client";
 
@@ -27,6 +28,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
+    <NuqsAdapter>
     <TRPCReactProvider>
       <html lang="en">
         <body
@@ -37,5 +39,6 @@ export default function RootLayout({
         </body>
       </html>
     </TRPCReactProvider>
+    </NuqsAdapter>
   );
 }
