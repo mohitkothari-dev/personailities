@@ -3,15 +3,53 @@ import { and, desc, eq, getTableColumns, ilike, sql, count } from 'drizzle-orm';
 import { db } from "@/db";
 import { agents } from "@/db/schema";
 import { createTRPCRouter, baseProcedure, protectedProcedure } from "@/trpc/init";
-import { agentsInsertSchema } from "@/modules/agents/schemas";
+import { agentsInsertSchema, agentsUpdateSchema } from "@/modules/agents/schemas";
 import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE, MIN_PAGE_SIZE } from '@/constants';
+import { TRPCError } from '@trpc/server';
 
 export const agentsRouter = createTRPCRouter({
-    getOne: protectedProcedure.input(z.object({id: z.string()})).query(async ({ input }) => {
+    update: protectedProcedure.input(agentsUpdateSchema).mutation(async ({ input, ctx }) => {
+    const [updatedAgent] = await db
+      .update(agents)
+      .set(input)
+      .where(and(eq(agents.id, input.id), eq(agents.userId, ctx.auth.user.id)))
+      .returning();
+    if (!updatedAgent) {
+      throw new TRPCError({ code: "NOT_FOUND", message: "Agent not found" });
+    }
+    return updatedAgent;
+    }),   
+
+  remove: protectedProcedure.input(z.object({ id: z.string() })).mutation(async ({ input, ctx }) => {
+    const [removeAgents] = await db
+      .delete(agents)
+      .where(and(eq(agents.id, input.id), eq(agents.userId, ctx.auth.user.id)))
+      .returning();
+
+    if (!removeAgents) {
+      throw new TRPCError({ code: "NOT_FOUND", message: "Agent not found" });
+    }
+
+    return removeAgents;
+    }),
+
+    getOne: protectedProcedure.input(z.object({id: z.string()})).query(async ({ input, ctx }) => {
         const [existingAgent] = await db.select({
             conversationCount: sql<number>`5`,
             ...getTableColumns(agents),
-        }).from(agents).where(eq(agents.id, input.id));
+        }).from(agents).where(
+            and(
+                eq(agents.id, input.id),
+                eq(agents.userId, ctx.auth.user.id)  // TO ensure that the agents user id is the same one as context
+            )
+        );
+
+        if (!existingAgent) {
+            throw new TRPCError({
+                code: 'NOT_FOUND',
+                message: 'Agent not found',
+            });
+        }
 
         return existingAgent;
     }),
