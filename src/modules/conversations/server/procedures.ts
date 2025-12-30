@@ -6,6 +6,7 @@ import { createTRPCRouter, baseProcedure, protectedProcedure } from "@/trpc/init
 import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE, MIN_PAGE_SIZE } from '@/constants';
 import { TRPCError } from '@trpc/server';
 import { conversationsInsertSchema, conversationsUpdateSchema } from '../schemas';
+import { ConversationStatus } from '../types';
 
 export const conversationsRouter = createTRPCRouter({
 
@@ -55,9 +56,11 @@ export const conversationsRouter = createTRPCRouter({
         page: z.number().default(DEFAULT_PAGE),
         pageSize: z.number().min(MIN_PAGE_SIZE).max(MAX_PAGE_SIZE).default(DEFAULT_PAGE_SIZE),
         search: z.string().nullish(),
+        agentId: z.string().nullish(),
+        status: z.enum([ ConversationStatus.UPCOMING, ConversationStatus.ACTIVE, ConversationStatus.COMPLETED, ConversationStatus.PROCESSING, ConversationStatus.CANCELLED ]).nullish(),
     }))
     .query(async ({ ctx, input }) => {
-        const { page, pageSize, search } = input;
+        const { page, pageSize, search, agentId, status } = input;
 
         const data = await db.select({
             ...getTableColumns(conversations),
@@ -68,6 +71,8 @@ export const conversationsRouter = createTRPCRouter({
         .where(and(
             eq(conversations.userId, ctx.auth.user.id),
             search ? ilike(conversations.name, `%${search}%`) : undefined,        //only load conversations that this user created
+            status ? eq(conversations.status, status) : undefined,
+            agentId ? eq(conversations.agentId, agentId) : undefined,
         )).orderBy(desc(conversations.createdAt), desc(conversations.id))
         .limit(pageSize)
         .offset((page - 1) * pageSize);
@@ -78,6 +83,8 @@ export const conversationsRouter = createTRPCRouter({
         .where(and(
             eq(conversations.userId, ctx.auth.user.id),
             search ? ilike(conversations.name, `%${search}%`) : undefined,        //only load conversations that this user created
+            status ? eq(conversations.status, status) : undefined,
+            agentId ? eq(conversations.agentId, agentId) : undefined,
         ));
 
         const totalPages = Math.ceil(total[0].count / pageSize);

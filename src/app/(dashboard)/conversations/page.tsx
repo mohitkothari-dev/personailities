@@ -8,7 +8,7 @@ import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { auth } from "@/lib/auth";
 
 import { getQueryClient, trpc } from "@/trpc/server";
-//import { loadSearchParams } from "@/modules/meetings/params";
+import { loadSearchParams } from "@/modules/conversations/params";
 import { ConversationsView, ConversationsViewLoading, ConversationsViewError } from "@/modules/conversations/ui/views/conversations-view";
 import ConversationsListHeader from "@/modules/conversations/ui/components/conversations-list-header";
 
@@ -17,7 +17,7 @@ interface Props {
 }
 
 const Page = async ({ searchParams }: Props) => {
-  // const filters = await loadSearchParams(searchParams);
+  const filters = await loadSearchParams(searchParams);
 
   const session = await auth.api.getSession({
     headers: await headers(),
@@ -27,7 +27,7 @@ const Page = async ({ searchParams }: Props) => {
 
   const queryClient = getQueryClient();
   void queryClient.prefetchQuery(
-    trpc.conversations.getMany.queryOptions({ })
+    trpc.conversations.getMany.queryOptions({ ...filters })
   );
 
   return (
