@@ -5,8 +5,30 @@ import { conversations } from "@/db/schema";
 import { createTRPCRouter, baseProcedure, protectedProcedure } from "@/trpc/init";
 import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE, MIN_PAGE_SIZE } from '@/constants';
 import { TRPCError } from '@trpc/server';
+import { conversationsInsertSchema, conversationsUpdateSchema } from '../schemas';
 
 export const conversationsRouter = createTRPCRouter({
+
+    update: protectedProcedure.input(conversationsUpdateSchema).mutation(async ({ input, ctx }) => {
+        const [updatedConversation] = await db
+          .update(conversations)
+          .set(input)
+          .where(and(eq(conversations.id, input.id), eq(conversations.userId, ctx.auth.user.id)))
+          .returning();
+        if (!updatedConversation) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Conversation not found" });
+        }
+        return updatedConversation;
+        }),
+
+    create: protectedProcedure.input(conversationsInsertSchema).mutation(async ({ ctx, input }) => {
+            const [createdConversation] = await db.insert(conversations).values({
+                ...input,
+                userId: ctx.auth.user.id,
+            }).returning();
+    
+            return createdConversation;
+        }),
 
     getOne: protectedProcedure.input(z.object({id: z.string()})).query(async ({ input, ctx }) => {
         const [existingConversation] = await db.select({
