@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import { and, desc, eq, getTableColumns, ilike, count } from 'drizzle-orm';
+import { and, desc, eq, getTableColumns, ilike, count, sql } from 'drizzle-orm';
 import { db } from "@/db";
-import { conversations } from "@/db/schema";
+import { conversations, agents } from "@/db/schema";
 import { createTRPCRouter, baseProcedure, protectedProcedure } from "@/trpc/init";
 import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE, MIN_PAGE_SIZE } from '@/constants';
 import { TRPCError } from '@trpc/server';
@@ -61,7 +61,10 @@ export const conversationsRouter = createTRPCRouter({
 
         const data = await db.select({
             ...getTableColumns(conversations),
+            agent: agents,
+            duration: sql<number>`EXTRACT(EPOCH FROM (ended_at - started_at))`.as("duration"),
         }).from(conversations)
+        .innerJoin(agents, eq(conversations.agentId, agents.id))
         .where(and(
             eq(conversations.userId, ctx.auth.user.id),
             search ? ilike(conversations.name, `%${search}%`) : undefined,        //only load conversations that this user created
@@ -71,6 +74,7 @@ export const conversationsRouter = createTRPCRouter({
 
         const total = await db.select({ count: count() })   
         .from(conversations)
+        .innerJoin(agents, eq(conversations.agentId, agents.id)) 
         .where(and(
             eq(conversations.userId, ctx.auth.user.id),
             search ? ilike(conversations.name, `%${search}%`) : undefined,        //only load conversations that this user created
