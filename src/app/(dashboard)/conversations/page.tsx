@@ -10,6 +10,7 @@ import { auth } from "@/lib/auth";
 import { getQueryClient, trpc } from "@/trpc/server";
 //import { loadSearchParams } from "@/modules/meetings/params";
 import { ConversationsView, ConversationsViewLoading, ConversationsViewError } from "@/modules/conversations/ui/views/conversations-view";
+import ConversationsListHeader from "@/modules/conversations/ui/components/conversations-list-header";
 
 interface Props {
   searchParams: Promise<SearchParams>;
@@ -18,11 +19,11 @@ interface Props {
 const Page = async ({ searchParams }: Props) => {
   // const filters = await loadSearchParams(searchParams);
 
-  // const session = await auth.api.getSession({
-  //   headers: await headers(),
-  // });
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
 
-  // if (!session) redirect("/sign-in");
+  if (!session) redirect("/sign-in");
 
   const queryClient = getQueryClient();
   void queryClient.prefetchQuery(
@@ -31,6 +32,7 @@ const Page = async ({ searchParams }: Props) => {
 
   return (
     <>
+    <ConversationsListHeader />
       <HydrationBoundary state={dehydrate(queryClient)}>
         <Suspense fallback={<ConversationsViewLoading />}>
           <ErrorBoundary fallback={<ConversationsViewError />}>
