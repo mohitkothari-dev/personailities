@@ -10,6 +10,25 @@ import { ConversationStatus } from '../types';
 
 export const conversationsRouter = createTRPCRouter({
 
+    remove: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ input, ctx }) => {
+      const [removedConversation] = await db
+        .delete(conversations)  
+        .where(
+          and(eq(conversations.id, input.id), eq(conversations.userId, ctx.auth.user.id))
+        )
+        .returning();
+
+      if (!removedConversation)
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Conversation not found!",
+        });
+
+      return removedConversation;
+    }),
+
     update: protectedProcedure.input(conversationsUpdateSchema).mutation(async ({ input, ctx }) => {
         const [updatedConversation] = await db
           .update(conversations)
@@ -34,7 +53,11 @@ export const conversationsRouter = createTRPCRouter({
     getOne: protectedProcedure.input(z.object({id: z.string()})).query(async ({ input, ctx }) => {
         const [existingConversation] = await db.select({
             ...getTableColumns(conversations),
-        }).from(conversations).where(
+            agent: agents,
+            duration: sql<number>`EXTRACT(EPOCH FROM (ended_at - started_at))`.as("duration"),
+        }).from(conversations)
+        .innerJoin(agents, eq(conversations.agentId, agents.id))
+        .where(
             and(
                 eq(conversations.id, input.id),
                 eq(conversations.userId, ctx.auth.user.id)  // TO ensure that the conversations user id is the same one as context
